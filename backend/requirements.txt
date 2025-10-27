@@ -1,0 +1,5 @@
+# requirements.txt additions
+python-multipart  # For file uploads
+python-dotenv
+pydantic[email]
+alembic
