@@ -10,6 +10,17 @@ from . import models, schemas, crud
 
 app = FastAPI()
 
+from fastapi.middleware.cors import CORSMiddleware
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],  # React dev server
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
 # Create tables (only for dev; in prod use Alembic migrations)
 Base.metadata.create_all(bind=engine)
 
