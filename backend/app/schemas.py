@@ -1,6 +1,33 @@
 from datetime import date
 from typing import Any, Dict, List, Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
+
+# ---------- AUTH & USER ----------
+
+class UserRegister(BaseModel):
+    hospitalName: str
+    registrationId: Optional[str] = None
+    hospitalType: Optional[str] = None
+    location: Optional[str] = None
+    email: str
+    phone: Optional[str] = None
+    password: str
+
+class UserLogin(BaseModel):
+    email: str
+    password: str
+
+class UserRead(BaseModel):
+    id: int
+    email: str
+    full_name: Optional[str] = None
+    phone: Optional[str] = None
+    role: str = "admin"
+    hospital_id: Optional[int] = None
+
+    model_config = {
+        "from_attributes": True
+    }
 
 # ---------- HOSPITAL ----------
 
@@ -19,6 +46,12 @@ class HospitalRead(HospitalBase):
     model_config = {
         "from_attributes": True
     }
+
+class AuthResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    user: UserRead
+    hospital: Optional[HospitalRead] = None
 
 # ---------- DEPARTMENT ----------
 

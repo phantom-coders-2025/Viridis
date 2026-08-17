@@ -5,7 +5,8 @@ from sqlalchemy.orm import Session
 
 from .business import calculate_co2e, get_emission_factor
 from .database import Base, SessionLocal, engine
-from .models import Achievement, Benchmark, ComplianceReport, Department, Emission, Hospital
+from .models import Achievement, Benchmark, ComplianceReport, Department, Emission, Hospital, User
+from .routers.auth import hash_password
 
 
 def seed_database(db: Session = None):
@@ -19,6 +20,7 @@ def seed_database(db: Session = None):
 
     try:
         # Clear child tables first
+        db.query(User).delete()
         db.query(Emission).delete()
         db.query(Achievement).delete()
         db.query(ComplianceReport).delete()
@@ -31,6 +33,7 @@ def seed_database(db: Session = None):
         if db.bind and db.bind.dialect.name == "postgresql":
             try:
                 for seq in [
+                    "users_id_seq",
                     "hospitals_id_seq",
                     "departments_id_seq",
                     "emissions_id_seq",
@@ -54,7 +57,20 @@ def seed_database(db: Session = None):
         db.commit()
         db.refresh(hospital)
 
-        # 2. Departments
+        # 2. Default Admin User
+        admin_user = User(
+            email="admin@viridis.health",
+            hashed_password=hash_password("admin123"),
+            full_name="Facility Director",
+            phone="+91 98765 43210",
+            role="admin",
+            hospital_id=hospital.id,
+        )
+        db.add(admin_user)
+        db.commit()
+        db.refresh(admin_user)
+
+        # 3. Departments
         dept_names = [
             "Operating Theatres",
             "Intensive Care Unit (ICU)",
@@ -71,7 +87,7 @@ def seed_database(db: Session = None):
             db.refresh(dept)
             departments[name] = dept
 
-        # 3. Generate 12 months of realistic emissions
+        # 4. Generate 12 months of realistic emissions
         today = date.today()
         dept_profiles = {
             "Operating Theatres": {"elec": 4500, "water": 18000, "bio_inc": 420, "bio_auto": 280},
@@ -177,7 +193,7 @@ def seed_database(db: Session = None):
         db.add_all(emissions_to_add)
         db.commit()
 
-        # 4. Benchmarks
+        # 5. Benchmarks
         benchmarks = [
             Benchmark(
                 hospital_id=hospital.id,
@@ -210,7 +226,7 @@ def seed_database(db: Session = None):
         ]
         db.add_all(benchmarks)
 
-        # 5. Compliance Reports
+        # 6. Compliance Reports
         reports = [
             ComplianceReport(
                 hospital_id=hospital.id,
@@ -239,7 +255,7 @@ def seed_database(db: Session = None):
         ]
         db.add_all(reports)
 
-        # 6. Achievements
+        # 7. Achievements
         achievements = [
             Achievement(
                 hospital_id=hospital.id,
@@ -269,11 +285,12 @@ def seed_database(db: Session = None):
         db.add_all(achievements)
         db.commit()
 
-        print(f"[SUCCESS] Successfully seeded 1 hospital, 5 departments, {len(emissions_to_add)} emissions, {len(benchmarks)} benchmarks, {len(reports)} reports, and {len(achievements)} achievements.")
+        print(f"[SUCCESS] Successfully seeded 1 hospital, 1 admin user, 5 departments, {len(emissions_to_add)} emissions, {len(benchmarks)} benchmarks, {len(reports)} reports, and {len(achievements)} achievements.")
         return {
             "status": "success",
             "hospital": hospital.name,
             "hospital_id": hospital.id,
+            "admin_user": admin_user.email,
             "departments": len(departments),
             "emissions_records": len(emissions_to_add),
             "benchmarks": len(benchmarks),

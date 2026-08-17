@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Date, Float, ForeignKey, Text
+from sqlalchemy import Boolean, Column, Date, Float, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import relationship
 from .database import Base
 
@@ -16,6 +16,21 @@ class Hospital(Base):
     compliance_reports = relationship("ComplianceReport", back_populates="hospital", cascade="all, delete-orphan")
     benchmarks = relationship("Benchmark", back_populates="hospital", cascade="all, delete-orphan")
     achievements = relationship("Achievement", back_populates="hospital", cascade="all, delete-orphan")
+    users = relationship("User", back_populates="hospital", cascade="all, delete-orphan")
+
+
+class User(Base):
+    __tablename__ = "users"
+    id = Column(Integer, primary_key=True, index=True)
+    email = Column(String(120), unique=True, index=True, nullable=False)
+    hashed_password = Column(String(255), nullable=False)
+    full_name = Column(String(100), nullable=True)
+    phone = Column(String(30), nullable=True)
+    role = Column(String(30), default="admin")
+    is_active = Column(Boolean, default=True)
+    hospital_id = Column(Integer, ForeignKey("hospitals.id"), nullable=True)
+
+    hospital = relationship("Hospital", back_populates="users")
 
 
 class Department(Base):

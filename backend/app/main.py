@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from .database import Base, engine, get_db
 from .routers import (
     ai_insights,
+    auth,
     benchmark,
     dashboard,
     emmision,
@@ -78,6 +79,7 @@ def seed_endpoint(db: Session = Depends(get_db)):
 
 # Register Routers (Both root level and /api/v1 prefix for backwards & forwards compatibility)
 routers = [
+    auth.router,
     hospital.router,
     emmision.router,
     dashboard.router,

@@ -6,12 +6,43 @@ export const API_BASE_URL =
 // Fallback hospital ID for default demo views
 export const DEFAULT_HOSPITAL_ID = 1;
 
+export interface UserProfile {
+  id: number;
+  email: string;
+  full_name?: string;
+  phone?: string;
+  role: string;
+  hospital_id?: number;
+}
+
 export interface Hospital {
   id: number;
   name: string;
   location?: string;
   type?: string;
   beds?: number;
+}
+
+export interface AuthResponse {
+  access_token: string;
+  token_type: string;
+  user: UserProfile;
+  hospital?: Hospital;
+}
+
+export interface RegisterPayload {
+  hospitalName: string;
+  registrationId?: string;
+  hospitalType?: string;
+  location?: string;
+  email: string;
+  phone?: string;
+  password: string;
+}
+
+export interface LoginPayload {
+  email: string;
+  password: string;
 }
 
 export interface Department {
@@ -149,18 +180,31 @@ export interface UploadResponse {
 // Universal fetcher helper
 async function fetchJSON<T>(endpoint: string, options?: RequestInit): Promise<T> {
   const url = `${API_BASE_URL}${endpoint}`;
+  const token = localStorage.getItem("viridis_token");
+
+  const headers: Record<string, string> = {
+    "Accept": "application/json",
+    ...(options?.headers as Record<string, string>),
+  };
+
+  if (token && !headers["Authorization"]) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+
+  if (options?.body && !(options.body instanceof FormData) && !headers["Content-Type"]) {
+    headers["Content-Type"] = "application/json";
+  }
+
   try {
     const res = await fetch(url, {
       ...options,
-      headers: {
-        "Accept": "application/json",
-        ...options?.headers,
-      },
+      headers,
     });
 
     if (!res.ok) {
-      const errorText = await res.text();
-      throw new Error(`API Error ${res.status}: ${errorText || res.statusText}`);
+      const errorData = await res.json().catch(() => null);
+      const detail = errorData?.detail || `API Error ${res.status}: ${res.statusText}`;
+      throw new Error(detail);
     }
 
     return await res.json();
@@ -173,6 +217,21 @@ async function fetchJSON<T>(endpoint: string, options?: RequestInit): Promise<T>
 
 // API methods
 export const api = {
+  // Auth methods
+  register: (payload: RegisterPayload) =>
+    fetchJSON<AuthResponse>("/auth/register", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+
+  login: (payload: LoginPayload) =>
+    fetchJSON<AuthResponse>("/auth/login", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+
+  getMe: () => fetchJSON<AuthResponse>("/auth/me"),
+
   getHospital: (id: number = DEFAULT_HOSPITAL_ID) =>
     fetchJSON<Hospital>(`/hospitals/${id}`),
 
