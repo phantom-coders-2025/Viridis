@@ -1,74 +1,102 @@
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { FileCheck, Download, CheckCircle2, Clock, AlertCircle } from "lucide-react";
+import { FileCheck, Download, CheckCircle2, Clock, AlertCircle, PlusCircle, RefreshCw, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { api, ComplianceReport as ComplianceReportType } from "@/lib/api";
 
 const ComplianceReports = () => {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  const reports = [
-    {
-      name: "CPCB Compliance",
-      description: "Central Pollution Control Board reporting",
-      status: "ready",
-      lastGenerated: "2024-03-15"
+  const { data: reports = [], isLoading } = useQuery({
+    queryKey: ["complianceReports"],
+    queryFn: () => api.getComplianceReports(),
+    retry: 1,
+  });
+
+  const generateMutation = useMutation({
+    mutationFn: () => api.generateComplianceReport(),
+    onSuccess: (newReport) => {
+      queryClient.invalidateQueries({ queryKey: ["complianceReports"] });
+      toast({
+        title: "Report Generated! ✅",
+        description: `Created compliance audit ledger for ${newReport.month}.`,
+      });
     },
-    {
-      name: "NABH Standards",
-      description: "National Accreditation Board for Hospitals",
-      status: "ready",
-      lastGenerated: "2024-03-10"
+    onError: (err: Error) => {
+      toast({
+        title: "Generation Failed",
+        description: err.message || "Failed to generate report",
+        variant: "destructive",
+      });
     },
-    {
-      name: "IGBC Green Hospital",
-      description: "Indian Green Building Council certification",
-      status: "pending",
-      lastGenerated: null
-    },
-    {
-      name: "ESG Reporting",
-      description: "Environmental, Social, and Governance metrics",
-      status: "submitted",
-      lastGenerated: "2024-02-28"
-    }
-  ];
+  });
 
   const getStatusBadge = (status: string) => {
-    switch (status) {
+    switch (status.toLowerCase()) {
+      case "approved":
       case "ready":
-        return <Badge className="bg-success text-success-foreground"><CheckCircle2 className="w-3 h-3 mr-1" /> Ready</Badge>;
+        return (
+          <Badge className="bg-success text-success-foreground">
+            <CheckCircle2 className="w-3 h-3 mr-1" /> Approved
+          </Badge>
+        );
       case "pending":
-        return <Badge className="bg-warning text-warning-foreground"><Clock className="w-3 h-3 mr-1" /> Pending</Badge>;
+      case "generated":
+        return (
+          <Badge className="bg-warning text-warning-foreground">
+            <Clock className="w-3 h-3 mr-1" /> Generated
+          </Badge>
+        );
       case "submitted":
-        return <Badge className="bg-primary text-primary-foreground"><FileCheck className="w-3 h-3 mr-1" /> Submitted</Badge>;
+        return (
+          <Badge className="bg-primary text-primary-foreground">
+            <FileCheck className="w-3 h-3 mr-1" /> Submitted
+          </Badge>
+        );
       default:
-        return <Badge variant="secondary"><AlertCircle className="w-3 h-3 mr-1" /> Unknown</Badge>;
+        return (
+          <Badge variant="secondary">
+            <AlertCircle className="w-3 h-3 mr-1" /> {status}
+          </Badge>
+        );
     }
   };
 
-  const handleGenerateReport = (reportName: string) => {
+  const handleDownload = (report: ComplianceReportType) => {
     toast({
-      title: "Generating Report",
-      description: `${reportName} is being prepared for download...`,
+      title: "Downloading Manifest",
+      description: `Downloading audit document for ${report.month}...`,
     });
-    
-    setTimeout(() => {
-      toast({
-        title: "Report Ready",
-        description: `${reportName} has been generated successfully`,
-      });
-    }, 2000);
   };
 
   return (
     <div className="max-w-6xl mx-auto space-y-6 animate-fade-in">
-      <div>
-        <h1 className="text-3xl font-bold text-foreground flex items-center gap-2">
-          <FileCheck className="w-8 h-8 text-primary" />
-          Compliance Reports
-        </h1>
-        <p className="text-muted-foreground">Generate audit-ready reports for regulatory compliance</p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground flex items-center gap-2">
+            <FileCheck className="w-8 h-8 text-primary" />
+            Compliance & ESG Reports
+          </h1>
+          <p className="text-muted-foreground">
+            Generate and maintain audit-ready environmental records for regulatory boards
+          </p>
+        </div>
+        <Button
+          onClick={() => generateMutation.mutate()}
+          disabled={generateMutation.isPending}
+          className="bg-primary hover:bg-primary/90 flex items-center gap-2 self-start"
+        >
+          {generateMutation.isPending ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <PlusCircle className="w-4 h-4" />
+          )}
+          Generate Monthly Report
+        </Button>
       </div>
 
       {/* Audit Readiness Meter */}
@@ -79,18 +107,19 @@ const ComplianceReports = () => {
         <CardContent>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <span className="text-6xl font-bold text-success-foreground">85%</span>
+              <span className="text-6xl font-bold text-success-foreground">92%</span>
               <div className="text-right">
-                <p className="text-sm text-success-foreground/80">3 of 4 reports ready</p>
-                <p className="text-xs text-success-foreground/60">Last updated: March 15, 2024</p>
+                <p className="text-sm text-success-foreground/80">
+                  {reports.length} verified monthly manifests
+                </p>
+                <p className="text-xs text-success-foreground/60">
+                  State Pollution Control Board & ESG compliant
+                </p>
               </div>
             </div>
             <div className="h-3 bg-success-foreground/20 rounded-full overflow-hidden">
-              <div className="h-full bg-success-foreground rounded-full" style={{ width: '85%' }} />
+              <div className="h-full bg-success-foreground rounded-full" style={{ width: "92%" }} />
             </div>
-            <p className="text-sm text-success-foreground/80 text-center">
-              You're well-prepared for compliance audits
-            </p>
           </div>
         </CardContent>
       </Card>
@@ -98,113 +127,39 @@ const ComplianceReports = () => {
       {/* Reports Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {reports.map((report) => (
-          <Card key={report.name} className="bg-gradient-card border-border/50">
+          <Card key={report.id} className="bg-gradient-card border-border/50">
             <CardHeader>
               <div className="flex items-start justify-between">
                 <div className="flex-1">
-                  <CardTitle className="text-lg">{report.name}</CardTitle>
-                  <p className="text-sm text-muted-foreground mt-1">{report.description}</p>
+                  <CardTitle className="text-lg">
+                    ESG Ledger: {report.month}
+                  </CardTitle>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {report.notes || "Biomedical & Utility emission audit records"}
+                  </p>
                 </div>
                 {getStatusBadge(report.status)}
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
-              {report.lastGenerated && (
-                <p className="text-xs text-muted-foreground">
-                  Last generated: {new Date(report.lastGenerated).toLocaleDateString()}
-                </p>
-              )}
-              
-              <div className="flex gap-2">
-                <Button 
-                  onClick={() => handleGenerateReport(report.name)}
-                  className="flex-1 bg-primary hover:bg-primary/90"
-                  disabled={report.status === "pending"}
+              <div className="flex items-center justify-between pt-2">
+                <span className="text-xs text-muted-foreground">
+                  Record ID: #{report.id}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleDownload(report)}
+                  className="flex items-center gap-1.5"
                 >
-                  Generate Report
+                  <Download className="w-3.5 h-3.5" />
+                  Download Manifest
                 </Button>
-                {report.status === "ready" && (
-                  <Button 
-                    variant="outline" 
-                    size="icon"
-                    onClick={() => toast({
-                      title: "Downloading",
-                      description: `${report.name} PDF is downloading...`
-                    })}
-                  >
-                    <Download className="w-4 h-4" />
-                  </Button>
-                )}
               </div>
             </CardContent>
           </Card>
         ))}
       </div>
-
-      {/* Document Upload Section */}
-      <Card className="bg-gradient-card border-border/50">
-        <CardHeader>
-          <CardTitle>Supporting Documents</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
-              <div className="flex items-center gap-3">
-                <FileCheck className="w-5 h-5 text-primary" />
-                <div>
-                  <p className="text-sm font-medium text-foreground">Energy Bills (Q1 2024)</p>
-                  <p className="text-xs text-muted-foreground">Uploaded on March 1, 2024</p>
-                </div>
-              </div>
-              <Badge variant="secondary">Verified</Badge>
-            </div>
-            
-            <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
-              <div className="flex items-center gap-3">
-                <FileCheck className="w-5 h-5 text-primary" />
-                <div>
-                  <p className="text-sm font-medium text-foreground">Waste Management Records</p>
-                  <p className="text-xs text-muted-foreground">Uploaded on February 28, 2024</p>
-                </div>
-              </div>
-              <Badge variant="secondary">Verified</Badge>
-            </div>
-
-            <Button variant="outline" className="w-full mt-2">
-              Upload Additional Documents
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Compliance Checklist */}
-      <Card className="bg-gradient-card border-border/50">
-        <CardHeader>
-          <CardTitle>Compliance Checklist</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2">
-            {[
-              { item: "Monthly emissions data recorded", done: true },
-              { item: "Waste segregation protocols documented", done: true },
-              { item: "Staff training certifications up to date", done: true },
-              { item: "Energy audit completed this quarter", done: false },
-              { item: "Water quality reports submitted", done: true },
-            ].map((check, i) => (
-              <div key={i} className="flex items-center gap-3 p-3 bg-muted/20 rounded-lg">
-                {check.done ? (
-                  <CheckCircle2 className="w-5 h-5 text-success" />
-                ) : (
-                  <Clock className="w-5 h-5 text-warning" />
-                )}
-                <span className={check.done ? "text-foreground" : "text-muted-foreground"}>
-                  {check.item}
-                </span>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 };

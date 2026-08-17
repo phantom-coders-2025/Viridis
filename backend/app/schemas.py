@@ -1,6 +1,6 @@
-from pydantic import BaseModel
-from typing import Optional
 from datetime import date
+from typing import Any, Dict, List, Optional
+from pydantic import BaseModel
 
 # ---------- HOSPITAL ----------
 
@@ -15,7 +15,6 @@ class HospitalCreate(HospitalBase):
 
 class HospitalRead(HospitalBase):
     id: int
-
 
     model_config = {
         "from_attributes": True
@@ -32,7 +31,6 @@ class DepartmentCreate(DepartmentBase):
 
 class DepartmentRead(DepartmentBase):
     id: int
-
 
     model_config = {
         "from_attributes": True
@@ -57,7 +55,6 @@ class EmissionRead(EmissionBase):
     id: int
     co2e: float
 
-
     model_config = {
         "from_attributes": True
     }
@@ -67,7 +64,7 @@ class EmissionRead(EmissionBase):
 class ComplianceReportBase(BaseModel):
     hospital_id: int
     month: date
-    status: Optional[str] = None
+    status: Optional[str] = "Pending"
     notes: Optional[str] = None
 
 class ComplianceReportCreate(ComplianceReportBase):
@@ -75,7 +72,6 @@ class ComplianceReportCreate(ComplianceReportBase):
 
 class ComplianceReportRead(ComplianceReportBase):
     id: int
-
 
     model_config = {
         "from_attributes": True
@@ -96,7 +92,6 @@ class BenchmarkCreate(BenchmarkBase):
 class BenchmarkRead(BenchmarkBase):
     id: int
 
-
     model_config = {
         "from_attributes": True
     }
@@ -105,7 +100,7 @@ class BenchmarkRead(BenchmarkBase):
 
 class AchievementBase(BaseModel):
     hospital_id: int
-    department_id: int
+    department_id: Optional[int] = None
     title: str
     date_earned: date
 
@@ -115,17 +110,103 @@ class AchievementCreate(AchievementBase):
 class AchievementRead(AchievementBase):
     id: int
 
-
     model_config = {
         "from_attributes": True
     }
 
-# ------- SAMPLE LIST RESPONSES (for FastAPI endpoints) -------
-# class HospitalList(BaseModel):
-#     __root__: List[HospitalRead]
+# ---------- DASHBOARD & ANALYTICS SCHEMAS ----------
 
-# class DepartmentList(BaseModel):
-#     __root__: List[DepartmentRead]
+class DashboardCategorySummary(BaseModel):
+    category: str
+    total_co2e: float
 
-# class EmissionList(BaseModel):
-#     __root__: List[EmissionRead]
+class DashboardDepartmentHighlight(BaseModel):
+    name: str
+    co2e: float
+
+class DashboardOverview(BaseModel):
+    total_emissions: float
+    electricity_co2e: float
+    water_co2e: float
+    waste_co2e: float
+    categories: List[DashboardCategorySummary]
+    monthly_trend: List[Dict[str, Any]]
+    highest_emitter: Optional[DashboardDepartmentHighlight] = None
+    best_performer: Optional[DashboardDepartmentHighlight] = None
+
+# ---------- SUSTAINABILITY SCORE SCHEMAS ----------
+
+class SustainabilityScoreDetails(BaseModel):
+    epi: float
+    waste_segregation: float
+    renewable_pct: float
+    trend: float
+    total_kwh: float
+
+class SustainabilityScoreResponse(BaseModel):
+    grade: str
+    score: int
+    details: SustainabilityScoreDetails
+    recommendations: List[Dict[str, str]]
+
+# ---------- AI INSIGHTS & FORECAST SCHEMAS ----------
+
+class AnomalyAlert(BaseModel):
+    id: str
+    title: str
+    department: str
+    category: str
+    severity: str
+    change_pct: str
+    message: str
+    recommendation: str
+    estimated_savings: str
+
+class SmartRecommendation(BaseModel):
+    id: str
+    title: str
+    description: str
+    impact: str
+    category: str
+
+class ForecastPoint(BaseModel):
+    month_offset: int
+    month_label: Optional[str] = None
+    predicted_co2e: float
+
+class HistoryPoint(BaseModel):
+    date: str
+    month_label: Optional[str] = None
+    co2e: float
+
+class AIInsightsResponse(BaseModel):
+    history: List[HistoryPoint]
+    predictions: List[ForecastPoint]
+    anomalies: List[AnomalyAlert]
+    recommendations: List[SmartRecommendation]
+
+# ---------- PEER COMPARISON SCHEMAS ----------
+
+class PeerHospital(BaseModel):
+    id: int
+    name: str
+    co2_per_bed: float
+    renewable_pct: float
+    score: int
+    rank: int
+
+class PeerComparisonResponse(BaseModel):
+    hospital_id: int
+    hospital_name: str
+    rank: int
+    total_peers: int
+    co2_per_bed: float
+    peer_avg_co2_per_bed: float
+    peers: List[PeerHospital]
+
+# ---------- CSV INGESTION SCHEMA ----------
+
+class CSVUploadResponse(BaseModel):
+    success: bool
+    rows: int
+    message: str

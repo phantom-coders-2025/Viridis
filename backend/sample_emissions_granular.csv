@@ -1,0 +1,11 @@
+hospital_id,department_id,date,category,subcategory,quantity,unit
+1,1,2026-07-01,electricity,grid,4500,kWh
+1,1,2026-07-01,electricity,renewable,1800,kWh
+1,1,2026-07-01,water,municipal,18000,L
+1,1,2026-07-01,biomedical,incinerated,420,kg
+1,1,2026-07-01,biomedical,autoclaved,280,kg
+1,2,2026-07-01,electricity,grid,5200,kWh
+1,2,2026-07-01,water,municipal,22000,L
+1,2,2026-07-01,biomedical,incinerated,350,kg
+1,3,2026-07-01,water,municipal,35000,L
+1,3,2026-07-01,electricity,grid,3800,kWh

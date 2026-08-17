@@ -1,0 +1,11 @@
+Department,Date,Electricity (kWh),Water (L),Biomedical Waste (kg)
+Operating Theatres,2026-06-01,4520,18400,680
+Intensive Care Unit (ICU),2026-06-01,5180,21900,640
+General Inpatient Wards,2026-06-01,3790,34800,650
+Radiology & Imaging,2026-06-01,3080,7950,130
+Outpatient Department (OPD),2026-06-01,1890,11800,195
+Operating Theatres,2026-07-01,4610,18900,710
+Intensive Care Unit (ICU),2026-07-01,5340,22400,670
+General Inpatient Wards,2026-07-01,3920,35600,680
+Radiology & Imaging,2026-07-01,3150,8100,140
+Outpatient Department (OPD),2026-07-01,1940,12100,210
