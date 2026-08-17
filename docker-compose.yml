@@ -1,0 +1,65 @@
+version: '3.8'
+
+services:
+  # 1. PostgreSQL Database
+  db:
+    image: postgres:16-alpine
+    container_name: viridis-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: viridis_user
+      POSTGRES_PASSWORD: viridis_secure_pass_2026
+      POSTGRES_DB: viridis_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - viridis_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U viridis_user -d viridis_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - viridis-network
+
+  # 2. FastAPI Backend
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: viridis-backend
+    restart: always
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://viridis_user:viridis_secure_pass_2026@db:5432/viridis_db
+      SECRET_KEY: viridis_enterprise_jwt_secret_key_change_in_prod_2026
+      ALGORITHM: HS256
+      ACCESS_TOKEN_EXPIRE_MINUTES: 1440
+    ports:
+      - "8000:8000"
+    networks:
+      - viridis-network
+
+  # 3. React Vite + Nginx Frontend
+  frontend:
+    build:
+      context: ./viridis-green-hub
+      dockerfile: Dockerfile
+    container_name: viridis-frontend
+    restart: always
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+    networks:
+      - viridis-network
+
+volumes:
+  viridis_pgdata:
+    driver: local
+
+networks:
+  viridis-network:
+    driver: bridge

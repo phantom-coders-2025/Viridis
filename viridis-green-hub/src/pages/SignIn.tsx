@@ -16,12 +16,12 @@ export const SignIn = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const handleFillDemo = () => {
-    setEmail("admin@viridis.health");
-    setPassword("admin123");
+  const handleFillDemoRole = (roleEmail: string, rolePass: string, label: string) => {
+    setEmail(roleEmail);
+    setPassword(rolePass);
     toast({
-      title: "Demo Credentials Filled ✨",
-      description: "Click 'Sign In' to enter Apollo Green Care Hospital dashboard.",
+      title: `${label} Credentials Loaded ✨`,
+      description: `Ready to sign in as ${roleEmail}`,
     });
   };
 
@@ -51,7 +51,7 @@ export const SignIn = () => {
 
       toast({
         title: "Login Successful! ✅",
-        description: `Welcome back to ${res.hospital?.name || "Viridis"}!`,
+        description: `Welcome back, ${res.user.full_name || res.user.email}!`,
       });
 
       // Redirect to dashboard
@@ -145,22 +145,54 @@ export const SignIn = () => {
               )}
             </Button>
 
-            {/* Quick Demo Fill Button */}
-            <div className="pt-2 border-t border-border/40 text-center">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={handleFillDemo}
-                className="w-full text-xs border-emerald-500/40 text-emerald-500 hover:bg-emerald-500/10 flex items-center justify-center gap-1.5"
-              >
-                <Sparkles className="w-3.5 h-3.5" />
-                Auto-Fill Demo Admin Account
-              </Button>
+            {/* 1-Click Role Presets */}
+            <div className="pt-3 border-t border-border/40 space-y-2">
+              <p className="text-[11px] text-center font-medium text-muted-foreground uppercase tracking-wider">
+                Instant Demo Role Access
+              </p>
+              <div className="grid grid-cols-2 gap-1.5">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleFillDemoRole("admin@apollo.com", "Admin@12345", "Hospital Admin")}
+                  className="text-xs h-8 border-emerald-500/30 hover:bg-emerald-500/10 text-foreground"
+                >
+                  🏥 Hospital Admin
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleFillDemoRole("superadmin@viridis.io", "Super@12345", "Super Admin")}
+                  className="text-xs h-8 border-emerald-500/30 hover:bg-emerald-500/10 text-foreground"
+                >
+                  👑 Super Admin
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleFillDemoRole("facility@apollo.com", "Facility@12345", "Facility Lead")}
+                  className="text-xs h-8 border-emerald-500/30 hover:bg-emerald-500/10 text-foreground"
+                >
+                  ⚡ Facility Lead
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleFillDemoRole("auditor@esg-cert.org", "Auditor@12345", "ESG Auditor")}
+                  className="text-xs h-8 border-emerald-500/30 hover:bg-emerald-500/10 text-foreground"
+                >
+                  📋 ESG Auditor
+                </Button>
+              </div>
             </div>
 
             {/* Link to Sign Up */}
             <p className="text-center text-xs text-muted-foreground mt-2">
+
               Don’t have an account?{" "}
               <button
                 type="button"
