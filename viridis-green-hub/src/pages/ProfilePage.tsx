@@ -7,10 +7,19 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 
+interface HospitalProfile {
+  hospitalName?: string;
+  registrationId?: string;
+  hospitalType?: string;
+  location?: string;
+  email?: string;
+  phone?: string;
+}
+
 const ProfilePage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [profile, setProfile] = useState<any>(null);
+  const [profile, setProfile] = useState<HospitalProfile | null>(null);
   const [passwords, setPasswords] = useState({ old: "", new: "", confirm: "" });
 
   useEffect(() => {
