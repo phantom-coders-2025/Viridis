@@ -15,6 +15,7 @@ from .routers import (
     ml_router,
     reports,
 )
+from .seed import seed_database
 
 
 def get_cors_origins() -> List[str]:
@@ -67,6 +68,12 @@ def health_check():
 def test_db(db: Session = Depends(get_db)):
     result = db.execute(text("SELECT 1;"))
     return {"db_connection": result.first() is not None}
+
+
+@app.post("/seed-demo-data")
+@app.post("/api/v1/seed")
+def seed_endpoint(db: Session = Depends(get_db)):
+    return seed_database(db)
 
 
 # Register Routers (Both root level and /api/v1 prefix for backwards & forwards compatibility)
